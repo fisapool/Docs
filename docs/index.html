@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Pricing Dashboard</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="brand">
+                <i class="fas fa-chart-line"></i>
+                <h2>Price Optimizer</h2>
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li class="active"><a href="#"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li><a href="#"><i class="fas fa-upload"></i> Upload Data</a></li>
+                    <li><a href="#"><i class="fas fa-chart-bar"></i> Analytics</a></li>
+                    <li><a href="#"><i class="fas fa-cog"></i> Settings</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="search-container">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search..." id="search-input">
+                </div>
+                <div class="user-menu">
+                    <span>Welcome, Admin</span>
+                    <i class="fas fa-user-circle"></i>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <div class="dashboard-header">
+                    <h1>Pricing Dashboard</h1>
+                    <div class="date-display" id="current-date">Loading date...</div>
+                </div>
+
+                <div class="metrics-cards">
+                    <div class="metric-card">
+                        <div class="metric-icon bg-blue">
+                            <i class="fas fa-tags"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h3>Products Analyzed</h3>
+                            <p class="metric-value" id="products-count">0</p>
+                            <p class="metric-change positive"><i class="fas fa-arrow-up"></i> 12% from last month</p>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon bg-green">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h3>Avg. Price</h3>
+                            <p class="metric-value" id="avg-price">$0.00</p>
+                            <p class="metric-change negative"><i class="fas fa-arrow-down"></i> 3% from last month</p>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon bg-orange">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h3>Market Coverage</h3>
+                            <p class="metric-value" id="market-coverage">0%</p>
+                            <p class="metric-change positive"><i class="fas fa-arrow-up"></i> 5% from last month</p>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon bg-purple">
+                            <i class="fas fa-sync"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h3>Last Update</h3>
+                            <p class="metric-value" id="last-update">Never</p>
+                            <p class="metric-note">Real-time data</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-row">
+                    <div class="dashboard-card wide-card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-chart-line"></i> Price Trends</h2>
+                            <div class="card-actions">
+                                <select id="trend-period">
+                                    <option value="7">Last 7 days</option>
+                                    <option value="30" selected>Last 30 days</option>
+                                    <option value="90">Last 90 days</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="price-trend-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-row">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-upload"></i> Data Upload</h2>
+                        </div>
+                        <div class="card-body">
+                            <form id="upload-form" class="styled-form">
+                                <div class="form-group">
+                                    <label for="data-file">Select CSV File:</label>
+                                    <div class="file-input-container">
+                                        <input type="file" id="data-file" accept=".csv" required>
+                                        <div class="file-input-button">
+                                            <i class="fas fa-file-upload"></i> Choose File
+                                        </div>
+                                        <div class="file-name" id="file-name">No file chosen</div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="data-type">Data Type:</label>
+                                    <div class="select-wrapper">
+                                        <select id="data-type" required>
+                                            <option value="inventory">Current Inventory</option>
+                                            <option value="competitor">Competitor Prices</option>
+                                            <option value="historical">Historical Sales</option>
+                                        </select>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn-primary"><i class="fas fa-cogs"></i> Process Data</button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-chart-pie"></i> Market Segments</h2>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="market-segment-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card results-table-card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-table"></i> Analysis Results</h2>
+                        <div class="card-actions">
+                            <input type="text" id="table-search" placeholder="Filter results..." class="table-filter">
+                            <button id="export-csv" class="btn-export"><i class="fas fa-download"></i> Export</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="upload-result" class="result-area active">
+                            <div class="table-container" id="results-table-container">
+                                <!-- Table will be inserted here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="results-container" class="dashboard-notification"></div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="js/dashboard.js"></script>
+    <script src="js/advanced-analysis.js"></script>
+    <script src="js/data-processor.js"></script>
+    <script src="js/charts.js"></script>
+</body>
+</html>
