@@ -1,40 +1,54 @@
 // Add this new file with more sophisticated algorithms
-function advancedPriceOptimization(data) {
-    // More sophisticated pricing algorithm
-    return data.map(item => {
-        const faceValue = parseFloat(item.face_value || 0);
-        const currentPrice = parseFloat(item.current_price || 0);
-        const daysInInventory = parseFloat(item.days_in_inventory || 0);
+function advancedPriceOptimization(data, pageSize = 100) {
+    // Process in smaller batches
+    let results = [];
+    const totalPages = Math.ceil(data.length / pageSize);
+    
+    for (let page = 0; page < totalPages; page++) {
+        const start = page * pageSize;
+        const end = Math.min(start + pageSize, data.length);
+        const batch = data.slice(start, end);
         
-        // Apply more factors to the pricing decision
-        let discount = 0.15; // Base discount
+        // Process batch
+        const batchResults = batch.map(item => {
+            const faceValue = parseFloat(item.face_value || 0);
+            const currentPrice = parseFloat(item.current_price || 0);
+            const daysInInventory = parseFloat(item.days_in_inventory || 0);
+            
+            // Apply more factors to the pricing decision
+            let discount = 0.15; // Base discount
+            
+            // Factor in inventory age
+            if (daysInInventory > 30) {
+                discount += 0.05; // Increase discount for older inventory
+            } else if (daysInInventory < 7) {
+                discount -= 0.03; // Reduce discount for fresh inventory
+            }
+            
+            // Factor in face value
+            if (faceValue > 100) {
+                discount += 0.02; // Higher discount for higher value cards
+            }
+            
+            // Ensure discount is within reasonable bounds
+            discount = Math.max(0.05, Math.min(0.25, discount));
+            
+            const optimizedPrice = faceValue * (1 - discount);
+            const priceChange = ((optimizedPrice - currentPrice) / currentPrice * 100).toFixed(2);
+            
+            return {
+                ...item,
+                optimized_price: optimizedPrice.toFixed(2),
+                price_change: priceChange,
+                discount_percentage: (discount * 100).toFixed(2) + '%',
+                confidence: calculateConfidence(item)
+            };
+        });
         
-        // Factor in inventory age
-        if (daysInInventory > 30) {
-            discount += 0.05; // Increase discount for older inventory
-        } else if (daysInInventory < 7) {
-            discount -= 0.03; // Reduce discount for fresh inventory
-        }
-        
-        // Factor in face value
-        if (faceValue > 100) {
-            discount += 0.02; // Higher discount for higher value cards
-        }
-        
-        // Ensure discount is within reasonable bounds
-        discount = Math.max(0.05, Math.min(0.25, discount));
-        
-        const optimizedPrice = faceValue * (1 - discount);
-        const priceChange = ((optimizedPrice - currentPrice) / currentPrice * 100).toFixed(2);
-        
-        return {
-            ...item,
-            optimized_price: optimizedPrice.toFixed(2),
-            price_change: priceChange,
-            discount_percentage: (discount * 100).toFixed(2) + '%',
-            confidence: calculateConfidence(item)
-        };
-    });
+        results = results.concat(batchResults);
+    }
+    
+    return results;
 }
 
 function calculateConfidence(item) {

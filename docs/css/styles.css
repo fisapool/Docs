@@ -574,3 +574,131 @@ td a:hover {
         display: none;
     }
 }
+
+/* Add these loading indicator styles */
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+.loading-text {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: var(--primary-color);
+}
+
+.loading-subtext {
+    font-size: 14px;
+    color: var(--text-light);
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 20px;
+    background: white;
+    border-left: 4px solid var(--primary-color);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    border-radius: 4px;
+    z-index: 1000;
+    transform: translateX(120%);
+    transition: transform 0.3s ease;
+    max-width: 350px;
+}
+
+.notification.show {
+    transform: translateX(0);
+}
+
+.notification i {
+    margin-right: 10px;
+    font-size: 18px;
+}
+
+.notification-success {
+    border-left-color: var(--success-color);
+}
+
+.notification-success i {
+    color: var(--success-color);
+}
+
+.notification-error {
+    border-left-color: var(--danger-color);
+}
+
+.notification-error i {
+    color: var(--danger-color);
+}
+
+.notification-warning {
+    border-left-color: var(--warning-color);
+}
+
+.notification-warning i {
+    color: var(--warning-color);
+}
+
+.notification-info {
+    border-left-color: var(--accent-color);
+}
+
+.notification-info i {
+    color: var(--accent-color);
+}
+
+.notification .close-btn {
+    margin-left: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: #aaa;
+}
+
+.notification .close-btn:hover {
+    color: #666;
+}
+
+.processing-status {
+    display: flex;
+    align-items: center;
+    background-color: var(--primary-color);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    animation: pulse 2s infinite;
+}
+
+.processing-status i {
+    margin-right: 10px;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.8; }
+    100% { opacity: 1; }
+}

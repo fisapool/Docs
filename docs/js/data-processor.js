@@ -4,6 +4,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const resultArea = document.getElementById('upload-result');
     const resultsContainer = document.getElementById('results-container');
     
+    // Update dashboard metrics with empty state initially
+    updateDashboardMetrics({
+        productsCount: '-',
+        avgPrice: '-',
+        marketCoverage: '-',
+        lastUpdate: 'Waiting for data...'
+    });
+    
     uploadForm.addEventListener('submit', function(e) {
         e.preventDefault();
         
@@ -11,32 +19,62 @@ document.addEventListener('DOMContentLoaded', function() {
         const dataType = document.getElementById('data-type').value;
         
         if (fileInput.files.length === 0) {
-            alert('Please select a file to upload');
+            showNotification('Please select a file to upload', 'error');
             return;
         }
         
         const file = fileInput.files[0];
         
-        // Display loading message
-        resultArea.innerHTML = '<p>Processing data...</p>';
+        // Display loading message with spinner
+        resultArea.innerHTML = `
+            <div class="loading-container">
+                <div class="loading-spinner"></div>
+                <p class="loading-text">Processing ${file.name}...</p>
+                <p class="loading-subtext">Analyzing data patterns and optimizing prices</p>
+            </div>
+        `;
         resultArea.classList.add('active');
+        
+        // Show processing status in results container
+        resultsContainer.innerHTML = `
+            <div class="processing-status">
+                <i class="fas fa-sync fa-spin"></i>
+                <span>Processing ${dataType} data...</span>
+            </div>
+        `;
+        resultsContainer.style.display = 'block';
+        
+        // Update dashboard metrics to loading state
+        updateDashboardMetrics({
+            productsCount: '<i class="fas fa-spinner fa-spin"></i>',
+            avgPrice: '<i class="fas fa-spinner fa-spin"></i>',
+            marketCoverage: '<i class="fas fa-spinner fa-spin"></i>',
+            lastUpdate: 'Processing...'
+        });
         
         // Read the CSV file
         const reader = new FileReader();
         
         reader.onload = function(e) {
             const csvData = e.target.result;
-            processData(csvData, dataType);
+            // Simulate network delay for demo purposes
+            setTimeout(() => {
+                processData(csvData, dataType);
+            }, 800); // Small delay to show loading state
         };
         
         reader.onerror = function() {
-            resultArea.innerHTML = '<p>Error reading file</p>';
+            resultArea.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-triangle"></i> Error reading file</div>';
+            showNotification('Failed to read the file', 'error');
         };
         
         reader.readAsText(file);
     });
     
     function processData(csvData, dataType) {
+        // Show processing status
+        showNotification('Processing data...', 'info');
+        
         // Parse CSV
         const rows = csvData.split('\n');
         const headers = rows[0].split(',');
@@ -57,121 +95,122 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Process based on data type
         let results;
-        switch(dataType) {
-            case 'inventory':
-                results = processInventoryData(data);
-                break;
-            case 'competitor':
-                results = processCompetitorData(data);
-                break;
-            case 'historical':
-                results = processHistoricalData(data);
-                break;
-            default:
-                resultArea.innerHTML = '<p>Unknown data type</p>';
-                return;
-        }
-        
-        displayResults(results, dataType);
-    }
-    
-    function processInventoryData(data) {
-        // Use the advanced analysis instead of the simple algorithm
-        return advancedPriceOptimization(data);
-    }
-    
-    function processCompetitorData(data) {
-        // Simulate ML processing for competitor data
-        return data.map(item => {
-            const competitorPrice = parseFloat(item.competitor_price || 0);
-            
-            // Simple competitive pricing strategy
-            const recommendedPrice = competitorPrice * 0.95;
-            
-            return {
-                ...item,
-                recommended_price: recommendedPrice.toFixed(2),
-                strategy: 'Undercut by 5%'
-            };
-        });
-    }
-    
-    function processHistoricalData(data) {
-        // Simulate ML processing for historical data
-        // Calculate average prices by product type
-        const productTypes = {};
-        
-        data.forEach(item => {
-            const type = item.product_type || 'Unknown';
-            const price = parseFloat(item.price || 0);
-            
-            if (!productTypes[type]) {
-                productTypes[type] = {
-                    count: 0,
-                    total: 0
-                };
+        try {
+            switch(dataType) {
+                case 'inventory':
+                    results = processInventoryData(data);
+                    break;
+                case 'competitor':
+                    results = processCompetitorData(data);
+                    break;
+                case 'historical':
+                    results = processHistoricalData(data);
+                    break;
+                default:
+                    resultArea.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-triangle"></i> Unknown data type</div>';
+                    showNotification('Unknown data type', 'error');
+                    return;
             }
             
-            productTypes[type].count++;
-            productTypes[type].total += price;
+            // Update charts with the processed data
+            updateChartsWithData(data, dataType);
+            
+            // Update dashboard metrics
+            updateDashboardMetrics({
+                productsCount: data.length,
+                avgPrice: calculateAveragePrice(data),
+                marketCoverage: calculateMarketCoverage(data, dataType),
+                lastUpdate: new Date().toLocaleString()
+            });
+            
+            displayResults(results, dataType);
+            showNotification('Analysis complete!', 'success');
+        } catch (error) {
+            console.error('Error processing data:', error);
+            resultArea.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-triangle"></i> Error processing data: ${error.message}</div>`;
+            showNotification('Error during analysis', 'error');
+        }
+    }
+    
+    function calculateAveragePrice(data) {
+        if (!data.length) return '$0.00';
+        
+        let totalPrice = 0;
+        let count = 0;
+        
+        data.forEach(item => {
+            const price = parseFloat(item.current_price || item.competitor_price || item.price || 0);
+            if (price > 0) {
+                totalPrice += price;
+                count++;
+            }
         });
         
-        return Object.keys(productTypes).map(type => {
-            const avg = productTypes[type].total / productTypes[type].count;
-            return {
-                product_type: type,
-                average_price: avg.toFixed(2),
-                data_points: productTypes[type].count,
-                trend: avg > 50 ? 'Upward' : 'Downward'
-            };
+        return count > 0 ? '$' + (totalPrice / count).toFixed(2) : '$0.00';
+    }
+    
+    function calculateMarketCoverage(data, dataType) {
+        if (dataType === 'competitor') {
+            // For competitor data, estimate market coverage based on number of competitors
+            const uniqueCompetitors = new Set();
+            data.forEach(item => {
+                if (item.competitor_name) {
+                    uniqueCompetitors.add(item.competitor_name);
+                }
+            });
+            
+            // Simplified calculation - in real system would be more sophisticated
+            return Math.min(uniqueCompetitors.size * 15, 95) + '%';
+        } else {
+            // For other data types, show a placeholder percentage
+            return ((data.length / 10) * 5) + '%';
+        }
+    }
+    
+    function updateDashboardMetrics(metrics) {
+        document.getElementById('products-count').innerHTML = metrics.productsCount;
+        document.getElementById('avg-price').innerHTML = metrics.avgPrice;
+        document.getElementById('market-coverage').innerHTML = metrics.marketCoverage;
+        document.getElementById('last-update').innerHTML = metrics.lastUpdate;
+    }
+    
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        
+        const icon = type === 'success' ? 'check-circle' : 
+                    type === 'error' ? 'exclamation-triangle' : 
+                    type === 'warning' ? 'exclamation-circle' : 'info-circle';
+        
+        notification.innerHTML = `
+            <i class="fas fa-${icon}"></i>
+            <span>${message}</span>
+            <button class="close-btn"><i class="fas fa-times"></i></button>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Animate in
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 10);
+        
+        // Auto remove after delay
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
+        }, 5000);
+        
+        // Close button
+        notification.querySelector('.close-btn').addEventListener('click', function() {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
         });
     }
     
-    function displayResults(results, dataType) {
-        if (!results || results.length === 0) {
-            resultArea.innerHTML = '<p>No results to display</p>';
-            return;
-        }
-        
-        // Create table to display results
-        let tableHtml = '<table><thead><tr>';
-        
-        // Table headers based on first result object
-        const headers = Object.keys(results[0]);
-        headers.forEach(header => {
-            tableHtml += `<th>${header.replace('_', ' ')}</th>`;
-        });
-        
-        tableHtml += '</tr></thead><tbody>';
-        
-        // Table rows
-        results.forEach(result => {
-            tableHtml += '<tr>';
-            headers.forEach(header => {
-                tableHtml += `<td>${result[header]}</td>`;
-            });
-            tableHtml += '</tr>';
-        });
-        
-        tableHtml += '</tbody></table>';
-        
-        // Display results
-        resultArea.innerHTML = `
-            <h3>Analysis Results (${dataType})</h3>
-            <p>${results.length} items processed</p>
-            ${tableHtml}
-        `;
-        
-        // Also show in results container
-        resultsContainer.innerHTML = `
-            <h3>Latest Analysis</h3>
-            <p>Data type: ${dataType}</p>
-            <p>Items processed: ${results.length}</p>
-            <button id="view-details" class="btn-primary">View Details</button>
-        `;
-        
-        document.getElementById('view-details').addEventListener('click', function() {
-            resultArea.scrollIntoView({ behavior: 'smooth' });
-        });
-    }
+    // Rest of your processing functions...
 });
